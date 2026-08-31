@@ -1,0 +1,34 @@
+{
+  "name": "inbox-bill-to-quickbooks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monitors a Gmail inbox for bills and automatically enters them into QuickBooks Online.",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "gmail:auth": "ts-node src/gmail/auth-setup.ts",
+    "qbo:auth": "ts-node src/quickbooks/auth-setup.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "googleapis": "^144.0.0",
+    "intuit-oauth": "^4.2.0",
+    "node-quickbooks": "^2.0.44"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^22.7.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
+  }
+}
