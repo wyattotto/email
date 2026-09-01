@@ -17,7 +17,11 @@
     "gmail:auth": "ts-node src/gmail/auth-setup.ts",
     "qbo:auth": "ts-node src/quickbooks/auth-setup.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "service:install": "node scripts/install-service.js",
+    "service:uninstall": "node scripts/uninstall-service.js",
+    "scan-task:register": "powershell -ExecutionPolicy Bypass -File scripts/register-scan-task.ps1",
+    "scan-task:unregister": "powershell -ExecutionPolicy Bypass -File scripts/unregister-scan-task.ps1"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
@@ -26,7 +30,8 @@
     "express": "^4.21.1",
     "googleapis": "^144.0.0",
     "intuit-oauth": "^4.2.0",
-    "node-quickbooks": "^2.0.44"
+    "node-quickbooks": "^2.0.44",
+    "node-windows": "^1.0.0-beta.8"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",

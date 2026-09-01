@@ -145,6 +145,21 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).send("Something went wrong. Check the server log.");
 });
 
-app.listen(config.server.port, config.server.host, () => {
+const httpServer = app.listen(config.server.port, config.server.host, () => {
   logger.info(`Bill review UI listening on http://${config.server.host}:${config.server.port}`);
 });
+
+// Closes the DB and HTTP listener cleanly on service stop / process
+// termination, instead of relying on an abrupt kill (which risks an
+// in-flight SQLite write or QuickBooks call being cut off mid-request).
+function shutdown(signal: string): void {
+  logger.info(`Received ${signal}, shutting down...`);
+  httpServer.close(() => {
+    store.close();
+    process.exit(0);
+  });
+  // Force-exit if connections don't drain in time.
+  setTimeout(() => process.exit(0), 5000).unref();
+}
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));

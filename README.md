@@ -122,22 +122,83 @@ Or during development: `npm run dev:scan` / `npm run dev:serve`.
 
 Run `npm run scan`, then open the review UI and work through the queue.
 
-### 7. Schedule the scan
+### 7. Run it for real, unattended
 
-Only the **scan** step is meant to run periodically — the review UI is a
-server you leave running (or start when you want to review bills).
-Example crontab entry scanning every 15 minutes:
+There are two pieces that need to run on their own from here on: the
+**scan** job (periodic) and the **review UI** (always running). See
+[Production setup (Windows)](#production-setup-windows) below for the Windows path (a real
+Windows Service + Task Scheduler); on Linux/Mac, cron plus a process
+manager works well:
 
 ```
+# crontab -e — scan every 15 minutes
 */15 * * * * cd /path/to/email && npm run scan >> logs/scan.log 2>&1
 ```
 
-To keep the review UI running in the background, use something like `pm2`,
-a systemd user service, or a `screen`/`tmux` session — whatever you'd
-normally use to keep a small local server alive. It binds to
-`127.0.0.1` by default; don't change `SERVER_HOST` to expose it beyond
-your own machine unless you put real authentication in front of it, since
-approving a bill there triggers a real QuickBooks write.
+Keep the review UI running with `pm2`, a systemd user service, or a
+`screen`/`tmux` session — whatever you'd normally use to keep a small
+local server alive. It binds to `127.0.0.1` by default; don't change
+`SERVER_HOST` to expose it beyond your own machine unless you put real
+authentication in front of it, since approving a bill there triggers a
+real QuickBooks write.
+
+## Production setup (Windows)
+
+Once you've verified the app works (Steps 1–6 above), set it up to run on
+its own — no terminal window to babysit, and it survives reboots.
+
+**1. Build once, from a regular (non-admin) terminal:**
+```
+npm install
+npm run build
+```
+
+**2. Install the review UI as a Windows Service** — this makes it start
+automatically at boot and restart itself if it ever crashes. Open
+PowerShell **as Administrator** (right-click → Run as Administrator),
+`cd` to the project folder, then:
+```
+npm run service:install
+```
+This installs and starts a service named `InboxBillToQuickBooks`. Check
+it any time in `services.msc`, or with:
+```
+Get-Service InboxBillToQuickBooks
+```
+Its stdout/stderr logs land in the project's `daemon\` folder.
+
+**3. Register the scan job** — this does *not* need an admin terminal.
+From a regular PowerShell prompt, in the project folder:
+```
+npm run scan-task:register
+```
+This creates a Task Scheduler task (`InboxBillToQuickBooks-Scan`) that
+runs the scan every 15 minutes. It only runs while you're logged in by
+default; open Task Scheduler if you want to change that to "run whether
+user is logged on or not" (Windows will ask you to confirm your account
+password for that setting — this project doesn't automate it). Scan
+output goes to `logs\scan.log`.
+
+**4. Verify:** open `http://localhost:4000` in a browser — the review UI
+should be up even after a reboot. Check `logs\scan.log` after ~15 minutes
+to confirm the scan job ran.
+
+**Updating later:**
+```
+npm run service:uninstall   # as Administrator
+git pull
+npm install
+npm run build
+npm run service:install     # as Administrator
+```
+(The scan task doesn't need to be re-registered unless you changed its
+schedule — it always runs the current `dist\scan.js`.)
+
+**Removing it entirely:**
+```
+npm run service:uninstall      # as Administrator
+npm run scan-task:unregister
+```
 
 ## Notes and limitations
 
@@ -154,6 +215,9 @@ approving a bill there triggers a real QuickBooks write.
   old approved/rejected rows periodically if that matters to you.
 - Secrets (`.env`, `.secrets/`, the SQLite database) are git-ignored. Treat
   them as credentials — don't commit or share them.
+- The `node-windows` dependency (used only by `scripts/*-service.js`) is a
+  no-op requirement on Linux/Mac — it's never imported by the app itself,
+  only by the Windows service install/uninstall scripts.
 
 ## Tests
 

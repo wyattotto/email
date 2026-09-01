@@ -1,7 +1,10 @@
 import * as dotenv from "dotenv";
 import * as path from "path";
 
-dotenv.config();
+// Load .env from the project root regardless of the process's working
+// directory — important when this runs as a Windows Service or a
+// Scheduled Task, which don't necessarily start in this directory.
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 function required(name: string): string {
   const value = process.env[name];

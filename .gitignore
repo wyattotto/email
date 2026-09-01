@@ -6,4 +6,5 @@ dist/
 *.sqlite3
 data/
 logs/*.log
+daemon/
 .DS_Store
