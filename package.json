@@ -1,0 +1,44 @@
+{
+  "name": "inbox-bill-to-quickbooks",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monitors a Gmail inbox for bills and automatically enters them into QuickBooks Online.",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "scan": "node dist/scan.js",
+    "serve": "node dist/server.js",
+    "start": "node dist/scan.js",
+    "dev:scan": "ts-node src/scan.ts",
+    "dev:serve": "ts-node src/server.ts",
+    "gmail:auth": "ts-node src/gmail/auth-setup.ts",
+    "qbo:auth": "ts-node src/quickbooks/auth-setup.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "service:install": "node scripts/install-service.js",
+    "service:uninstall": "node scripts/uninstall-service.js",
+    "scan-task:register": "powershell -ExecutionPolicy Bypass -File scripts/register-scan-task.ps1",
+    "scan-task:unregister": "powershell -ExecutionPolicy Bypass -File scripts/unregister-scan-task.ps1"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "googleapis": "^144.0.0",
+    "intuit-oauth": "^4.2.0",
+    "node-quickbooks": "^2.0.44",
+    "node-windows": "^1.0.0-beta.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.7.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
+  }
+}
