@@ -1,4 +1,3 @@
-import { Readable } from "stream";
 import { config } from "../config";
 import { loadQboTokens, saveQboTokens, QboTokens } from "./token-store";
 import { logger } from "../util/logger";
@@ -153,7 +152,13 @@ export interface AttachmentToUpload {
 
 /** Uploads a file as a QuickBooks Attachable and links it to the given Bill. */
 export async function attachFileToBill(qbo: any, billId: string, attachment: AttachmentToUpload): Promise<void> {
+  // Pass the raw Buffer, not a Readable stream: node-quickbooks builds the
+  // upload as multipart form-data, and form-data can only compute a
+  // Content-Length synchronously for a Buffer/string value. A stream
+  // (e.g. Readable.from(buffer)) has no known length up front, so the
+  // request goes out without Content-Length — which QuickBooks' upload
+  // endpoint rejects outright ("Content-Length header is required").
   await promisify<any>((cb) =>
-    qbo.upload(attachment.filename, attachment.mimeType, Readable.from(attachment.data), "Bill", billId, cb)
+    qbo.upload(attachment.filename, attachment.mimeType, attachment.data, "Bill", billId, cb)
   );
 }
