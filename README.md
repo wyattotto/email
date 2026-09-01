@@ -103,9 +103,6 @@ In `.env`:
 - `GMAIL_SENDER_BLOCKLIST` — comma-separated senders (email address or
   domain) to always skip, e.g. one Claude keeps misclassifying:
   `GMAIL_SENDER_BLOCKLIST=noreply@confusing-sender.com`.
-- `GMAIL_SENDER_ALLOWLIST` — comma-separated senders to *exclusively* scan,
-  ignoring everything else. Use this instead of the blocklist if you'd
-  rather explicitly whitelist your known billers.
 - `CONFIDENCE_THRESHOLD` — pending bills below this confidence (or missing
   vendor/amount) get a "needs a closer look" badge in the review UI. This
   never blocks anything from reaching QuickBooks by itself — you always

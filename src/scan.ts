@@ -14,7 +14,7 @@ async function run(): Promise<void> {
   const summary = { scanned: 0, alreadySeen: 0, notBills: 0, pendingApproval: 0, errors: 0 };
 
   try {
-    const query = buildSearchQuery(config.gmail.query, config.gmail.senderAllowlist, config.gmail.senderBlocklist);
+    const query = buildSearchQuery(config.gmail.query, config.gmail.senderBlocklist);
     const messageIds = await gmail.listCandidateMessageIds(query);
     logger.info(`Found ${messageIds.length} candidate email(s) matching query: ${query}`);
 
