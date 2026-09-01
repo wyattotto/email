@@ -1,8 +1,14 @@
 import express, { Request, Response, NextFunction } from "express";
 import { config } from "./config";
-import { Store, ApprovedFields } from "./db/store";
+import { Store, ApprovedFields, AttachmentRow } from "./db/store";
 import { GmailClient } from "./gmail/client";
-import { createQboClient, findOrCreateVendor, resolveExpenseAccount, createBill } from "./quickbooks/client";
+import {
+  createQboClient,
+  findOrCreateVendor,
+  resolveExpenseAccount,
+  createBill,
+  attachFileToBill,
+} from "./quickbooks/client";
 import { renderPendingList, renderHistoryList, renderBillDetail } from "./server/views";
 import { logger } from "./util/logger";
 
@@ -54,6 +60,19 @@ app.get("/attachments/:id", (req, res) => {
   res.send(attachment.data);
 });
 
+// A file failing to attach shouldn't undo (or fail to report) a bill that's
+// already been created in QuickBooks — each attachment is tried independently
+// and failures are logged, not thrown.
+async function attachStoredFilesToBill(qbo: any, billId: string, attachments: AttachmentRow[]): Promise<void> {
+  for (const attachment of attachments) {
+    try {
+      await attachFileToBill(qbo, billId, attachment);
+    } catch (err) {
+      logger.warn(`Failed to attach ${attachment.filename} to QuickBooks bill ${billId}:`, err);
+    }
+  }
+}
+
 app.post(
   "/bills/:id/approve",
   asyncRoute(async (req, res) => {
@@ -95,6 +114,7 @@ app.post(
 
       store.markApproved(bill.id, fields, created.Id);
       logger.info(`Approved bill ${bill.id} -> QuickBooks bill ${created.Id}`);
+      await attachStoredFilesToBill(qbo, created.Id, store.getAttachments(bill.id));
       await syncGmailLabels(bill.messageId, config.gmail.approvedLabel, config.gmail.pendingLabel);
       res.redirect("/");
     } catch (err) {

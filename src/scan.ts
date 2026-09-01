@@ -1,5 +1,6 @@
 import { config } from "./config";
 import { GmailClient, CandidateEmail } from "./gmail/client";
+import { buildSearchQuery } from "./gmail/query";
 import { classifyEmail } from "./extraction/classify";
 import { decideAction } from "./extraction/decision";
 import { Store } from "./db/store";
@@ -13,8 +14,9 @@ async function run(): Promise<void> {
   const summary = { scanned: 0, alreadySeen: 0, notBills: 0, pendingApproval: 0, errors: 0 };
 
   try {
-    const messageIds = await gmail.listCandidateMessageIds(config.gmail.query);
-    logger.info(`Found ${messageIds.length} candidate email(s) matching query: ${config.gmail.query}`);
+    const query = buildSearchQuery(config.gmail.query, config.gmail.senderAllowlist, config.gmail.senderBlocklist);
+    const messageIds = await gmail.listCandidateMessageIds(query);
+    logger.info(`Found ${messageIds.length} candidate email(s) matching query: ${query}`);
 
     for (const messageId of messageIds) {
       summary.scanned++;

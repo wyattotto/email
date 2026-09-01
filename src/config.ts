@@ -16,12 +16,25 @@ function optional(name: string, fallback: string): string {
   return value && value.length > 0 ? value : fallback;
 }
 
+function optionalList(name: string): string[] {
+  const value = process.env[name];
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+}
+
 export const config = {
   gmail: {
     clientId: required("GMAIL_CLIENT_ID"),
     clientSecret: required("GMAIL_CLIENT_SECRET"),
     refreshToken: required("GMAIL_REFRESH_TOKEN"),
     query: optional("GMAIL_QUERY", "in:inbox -label:bill-scanned newer_than:30d"),
+    // If set, ONLY these senders (email addresses or domains) are scanned — everything else is ignored.
+    senderAllowlist: optionalList("GMAIL_SENDER_ALLOWLIST"),
+    // These senders (email addresses or domains) are always skipped, even if they'd otherwise match.
+    senderBlocklist: optionalList("GMAIL_SENDER_BLOCKLIST"),
     // Applied to every scanned email so it's never re-scanned, regardless of outcome.
     scannedLabel: optional("GMAIL_SCANNED_LABEL", "bill-scanned"),
     // Applied to bills waiting for your approval in the review UI.

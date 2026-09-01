@@ -1,3 +1,4 @@
+import { Readable } from "stream";
 import { config } from "../config";
 import { loadQboTokens, saveQboTokens, QboTokens } from "./token-store";
 import { logger } from "../util/logger";
@@ -142,4 +143,17 @@ export async function createBill(qbo: any, input: CreateBillInput): Promise<any>
     ],
   };
   return promisify<any>((cb) => qbo.createBill(bill, cb));
+}
+
+export interface AttachmentToUpload {
+  filename: string;
+  mimeType: string;
+  data: Buffer;
+}
+
+/** Uploads a file as a QuickBooks Attachable and links it to the given Bill. */
+export async function attachFileToBill(qbo: any, billId: string, attachment: AttachmentToUpload): Promise<void> {
+  await promisify<any>((cb) =>
+    qbo.upload(attachment.filename, attachment.mimeType, Readable.from(attachment.data), "Bill", billId, cb)
+  );
 }

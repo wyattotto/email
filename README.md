@@ -35,7 +35,8 @@ On each one you can:
 - **Approve & send to QuickBooks** — finds or creates the vendor, resolves
   an expense account (Claude's suggested category if it matches an
   existing account, else `QBO_DEFAULT_EXPENSE_ACCOUNT`), creates the Bill,
-  and labels the email `bill-approved`.
+  attaches the original PDF/image attachment(s) to it in QuickBooks, and
+  labels the email `bill-approved`.
 - **Reject** — no QuickBooks entry is created; the email is labeled
   `bill-rejected`.
 
@@ -99,6 +100,12 @@ and set `ANTHROPIC_API_KEY` in `.env`.
 In `.env`:
 
 - `GMAIL_QUERY` — which emails count as candidates each scan.
+- `GMAIL_SENDER_BLOCKLIST` — comma-separated senders (email address or
+  domain) to always skip, e.g. one Claude keeps misclassifying:
+  `GMAIL_SENDER_BLOCKLIST=noreply@confusing-sender.com`.
+- `GMAIL_SENDER_ALLOWLIST` — comma-separated senders to *exclusively* scan,
+  ignoring everything else. Use this instead of the blocklist if you'd
+  rather explicitly whitelist your known billers.
 - `CONFIDENCE_THRESHOLD` — pending bills below this confidence (or missing
   vendor/amount) get a "needs a closer look" badge in the review UI. This
   never blocks anything from reaching QuickBooks by itself — you always
