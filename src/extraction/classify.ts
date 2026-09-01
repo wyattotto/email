@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { config } from "../config";
-import { CandidateEmail, EmailAttachment, GmailClient } from "../gmail/client";
+import { CandidateEmail, FetchedAttachment } from "../gmail/client";
 import { BillExtraction } from "./types";
 
 const client = new Anthropic({ apiKey: config.claude.apiKey });
@@ -74,7 +74,7 @@ and lower confidence rather than guessing. Always respond by calling the record_
 
 export async function classifyEmail(
   email: CandidateEmail,
-  gmail: GmailClient
+  attachments: FetchedAttachment[]
 ): Promise<BillExtraction> {
   const content: ContentBlock[] = [];
 
@@ -85,8 +85,8 @@ export async function classifyEmail(
     `Body:\n${email.bodyText || "(no plain text body)"}`;
   content.push({ type: "text", text: header });
 
-  for (const attachment of email.attachments) {
-    const block = await attachmentToContentBlock(email.id, attachment, gmail);
+  for (const attachment of attachments) {
+    const block = attachmentToContentBlock(attachment);
     if (block) content.push(block);
   }
 
@@ -122,14 +122,8 @@ export async function classifyEmail(
   };
 }
 
-async function attachmentToContentBlock(
-  messageId: string,
-  attachment: EmailAttachment,
-  gmail: GmailClient
-): Promise<ContentBlock | null> {
-  const data = await gmail.getAttachmentData(messageId, attachment.attachmentId);
-  if (!data) return null;
-  const base64 = data.toString("base64");
+function attachmentToContentBlock(attachment: FetchedAttachment): ContentBlock | null {
+  const base64 = attachment.data.toString("base64");
 
   if (attachment.mimeType === "application/pdf") {
     return {

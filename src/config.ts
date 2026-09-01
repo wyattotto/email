@@ -21,12 +21,15 @@ export const config = {
     clientId: required("GMAIL_CLIENT_ID"),
     clientSecret: required("GMAIL_CLIENT_SECRET"),
     refreshToken: required("GMAIL_REFRESH_TOKEN"),
-    query: optional(
-      "GMAIL_QUERY",
-      "in:inbox -label:bill-processed -label:bill-needs-review newer_than:30d"
-    ),
-    processedLabel: optional("GMAIL_PROCESSED_LABEL", "bill-processed"),
-    needsReviewLabel: optional("GMAIL_NEEDS_REVIEW_LABEL", "bill-needs-review"),
+    query: optional("GMAIL_QUERY", "in:inbox -label:bill-scanned newer_than:30d"),
+    // Applied to every scanned email so it's never re-scanned, regardless of outcome.
+    scannedLabel: optional("GMAIL_SCANNED_LABEL", "bill-scanned"),
+    // Applied to bills waiting for your approval in the review UI.
+    pendingLabel: optional("GMAIL_PENDING_LABEL", "bill-pending-review"),
+    // Applied once you approve a bill and it's created in QuickBooks.
+    approvedLabel: optional("GMAIL_APPROVED_LABEL", "bill-approved"),
+    // Applied if you reject a bill in the review UI.
+    rejectedLabel: optional("GMAIL_REJECTED_LABEL", "bill-rejected"),
   },
   qbo: {
     clientId: required("QBO_CLIENT_ID"),
@@ -45,4 +48,8 @@ export const config = {
   },
   confidenceThreshold: parseFloat(optional("CONFIDENCE_THRESHOLD", "0.75")),
   dbPath: optional("DB_PATH", path.join(process.cwd(), "data", "state.sqlite3")),
+  server: {
+    port: parseInt(optional("SERVER_PORT", "4000"), 10),
+    host: optional("SERVER_HOST", "127.0.0.1"),
+  },
 };

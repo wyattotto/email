@@ -18,6 +18,12 @@ export interface CandidateEmail {
   attachments: EmailAttachment[];
 }
 
+export interface FetchedAttachment {
+  filename: string;
+  mimeType: string;
+  data: Buffer;
+}
+
 const SUPPORTED_ATTACHMENT_MIME_TYPES = new Set([
   "application/pdf",
   "image/png",
@@ -145,6 +151,27 @@ export class GmailClient {
       id: messageId,
       requestBody: { addLabelIds: [labelId] },
     });
+  }
+
+  async removeLabel(messageId: string, labelName: string): Promise<void> {
+    const labelId = await this.ensureLabel(labelName);
+    await this.gmail.users.messages.modify({
+      userId: "me",
+      id: messageId,
+      requestBody: { removeLabelIds: [labelId] },
+    });
+  }
+
+  /** Fetches attachment bytes for every supported attachment on an email, skipping any that are too large. */
+  async fetchAttachments(email: CandidateEmail): Promise<FetchedAttachment[]> {
+    const results: FetchedAttachment[] = [];
+    for (const attachment of email.attachments) {
+      const data = await this.getAttachmentData(email.id, attachment.attachmentId);
+      if (data) {
+        results.push({ filename: attachment.filename, mimeType: attachment.mimeType, data });
+      }
+    }
+    return results;
   }
 }
 

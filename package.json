@@ -9,8 +9,11 @@
   },
   "scripts": {
     "build": "tsc -p .",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "scan": "node dist/scan.js",
+    "serve": "node dist/server.js",
+    "start": "node dist/scan.js",
+    "dev:scan": "ts-node src/scan.ts",
+    "dev:serve": "ts-node src/server.ts",
     "gmail:auth": "ts-node src/gmail/auth-setup.ts",
     "qbo:auth": "ts-node src/quickbooks/auth-setup.ts",
     "test": "vitest run",
@@ -20,12 +23,14 @@
     "@anthropic-ai/sdk": "^0.32.1",
     "better-sqlite3": "^11.3.0",
     "dotenv": "^16.4.5",
+    "express": "^4.21.1",
     "googleapis": "^144.0.0",
     "intuit-oauth": "^4.2.0",
     "node-quickbooks": "^2.0.44"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",
+    "@types/express": "^4.17.21",
     "@types/node": "^22.7.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",

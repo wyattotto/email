@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { decideAction } from "../src/extraction/decision";
+import { decideAction, isLowConfidence } from "../src/extraction/decision";
 import { BillExtraction } from "../src/extraction/types";
 
 function baseExtraction(overrides: Partial<BillExtraction> = {}): BillExtraction {
@@ -19,28 +19,31 @@ function baseExtraction(overrides: Partial<BillExtraction> = {}): BillExtraction
 }
 
 describe("decideAction", () => {
-  it("skips non-bill emails", () => {
-    const result = decideAction(baseExtraction({ isBill: false }), 0.75);
-    expect(result.kind).toBe("skip");
+  it("skips non-bill emails so they never reach the review queue", () => {
+    expect(decideAction(baseExtraction({ isBill: false })).kind).toBe("skip");
   });
 
-  it("creates a bill when confident and complete", () => {
-    const result = decideAction(baseExtraction(), 0.75);
-    expect(result.kind).toBe("create_bill");
+  it("sends bills to review regardless of confidence", () => {
+    expect(decideAction(baseExtraction()).kind).toBe("review");
+    expect(decideAction(baseExtraction({ confidence: 0.1 })).kind).toBe("review");
+  });
+});
+
+describe("isLowConfidence", () => {
+  it("is false for a confident, complete extraction", () => {
+    expect(isLowConfidence(baseExtraction(), 0.75)).toBe(false);
   });
 
-  it("flags low-confidence bills for review instead of auto-creating", () => {
-    const result = decideAction(baseExtraction({ confidence: 0.4 }), 0.75);
-    expect(result.kind).toBe("needs_review");
+  it("is true when confidence is below the threshold", () => {
+    expect(isLowConfidence(baseExtraction({ confidence: 0.4 }), 0.75)).toBe(true);
   });
 
-  it("flags bills missing a vendor name for review", () => {
-    const result = decideAction(baseExtraction({ vendorName: null }), 0.75);
-    expect(result.kind).toBe("needs_review");
+  it("is true when the vendor name is missing", () => {
+    expect(isLowConfidence(baseExtraction({ vendorName: null }), 0.75)).toBe(true);
   });
 
-  it("flags bills with a zero or missing amount for review", () => {
-    expect(decideAction(baseExtraction({ amount: null }), 0.75).kind).toBe("needs_review");
-    expect(decideAction(baseExtraction({ amount: 0 }), 0.75).kind).toBe("needs_review");
+  it("is true when the amount is missing or non-positive", () => {
+    expect(isLowConfidence(baseExtraction({ amount: null }), 0.75)).toBe(true);
+    expect(isLowConfidence(baseExtraction({ amount: 0 }), 0.75)).toBe(true);
   });
 });
